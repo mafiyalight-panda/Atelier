@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Atelier — Outfit Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#ECE4D6;
+    --surface:#FAF6EE;
+    --surface-raised:#FFFFFF;
+    --ink:#241F1B;
+    --ink-soft:#8A7C6C;
+    --ink-faint:#B4A896;
+    --line:#DCD0BB;
+    --line-strong:#C7B79A;
+    --burgundy:#6B2737;
+    --burgundy-deep:#4A1C27;
+    --burgundy-wash:#EFDEE1;
+    --cognac:#A9713C;
+    --cognac-wash:#F1E4D2;
+    --danger:#A23B2E;
+    --radius-s:6px;
+    --radius-m:12px;
+    --radius-l:20px;
+    --shadow-card:0 1px 2px rgba(36,31,27,0.06), 0 6px 16px -8px rgba(36,31,27,0.18);
+    --shadow-pop:0 20px 60px -20px rgba(36,31,27,0.45);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    overscroll-behavior:none;
+  }
+  body::before{
+    content:'';
+    position:fixed; inset:0;
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(36,31,27,0.035) 1px, transparent 0);
+    background-size:22px 22px;
+    pointer-events:none;
+    z-index:0;
+  }
+  #app{position:relative; z-index:1; min-height:100vh; display:flex; flex-direction:column;}
+  h1,h2,h3{font-family:'Fraunces',serif; font-weight:500; margin:0; letter-spacing:-0.01em;}
+  button{font-family:'Inter',sans-serif; cursor:pointer;}
+  input,select{font-family:'Inter',sans-serif;}
+  .eyebrow{
+    font-size:0.68rem; font-weight:600; letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+  .scrim{position:fixed; inset:0; background:rgba(36,31,27,0.42); backdrop-filter:blur(2px); z-index:40;}
+  ::-webkit-scrollbar{width:10px; height:10px;}
+  ::-webkit-scrollbar-thumb{background:var(--line-strong); border-radius:10px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+
+  /* ---------- Header ---------- */
+  header.top{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px clamp(16px,3vw,40px) 0;
+    flex-wrap:wrap; gap:12px;
+  }
+  .wordmark{display:flex; align-items:baseline; gap:8px;}
+  .wordmark h1{font-size:1.5rem; letter-spacing:-0.02em;}
+  .wordmark span{font-size:0.68rem; color:var(--ink-soft); letter-spacing:0.14em; text-transform:uppercase;}
+  nav.tabs{display:flex; gap:2px; background:var(--surface); border:1px solid var(--line); border-radius:999px; padding:3px;}
+  nav.tabs button{
+    border:none; background:transparent; color:var(--ink-soft);
+    padding:9px 18px; border-radius:999px; font-size:0.86rem; font-weight:600;
+    transition:all .18s ease;
+  }
+  nav.tabs button.active{background:var(--burgundy); color:#fff;}
+  main.content{flex:1; padding:18px clamp(16px,3vw,40px) 60px;}
+
+  /* ---------- Buttons ---------- */
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    border-radius:999px; border:1px solid transparent; font-weight:600; font-size:0.88rem;
+    padding:11px 22px; transition:transform .12s ease, background .15s ease, border-color .15s ease;
+  }
+  .btn:active{transform:scale(0.97);}
+  .btn-primary{background:var(--burgundy); color:#fff;}
+  .btn-primary:hover{background:var(--burgundy-deep);}
+  .btn-primary:disabled{background:var(--ink-faint); cursor:not-allowed;}
+  .btn-ghost{background:transparent; color:var(--ink); border-color:var(--line-strong);}
+  .btn-ghost:hover{border-color:var(--ink-soft);}
+  .btn-text{background:transparent; color:var(--ink-soft); border:none; padding:8px 10px;}
+  .btn-text:hover{color:var(--ink);}
+  .btn-danger{background:transparent; color:var(--danger); border-color:rgba(162,59,46,0.35);}
+  .btn-danger:hover{background:rgba(162,59,46,0.08);}
+
+  /* ---------- Chips ---------- */
+  .chip{
+    border:1px solid var(--line-strong); background:var(--surface); color:var(--ink);
+    padding:7px 14px; border-radius:999px; font-size:0.8rem; font-weight:600;
+    transition:all .15s ease; white-space:nowrap;
+  }
+  .chip.active{background:var(--ink); color:#fff; border-color:var(--ink);}
+  .chip.burgundy.active{background:var(--burgundy); border-color:var(--burgundy);}
+  .chip-row{display:flex; gap:8px; flex-wrap:wrap;}
+
+  /* ---------- Empty state ---------- */
+  .empty{
+    text-align:center; padding:60px 20px; color:var(--ink-soft);
+    display:flex; flex-direction:column; align-items:center; gap:14px;
+  }
+  .empty svg{opacity:0.5;}
+  .empty p{max-width:340px; font-size:0.92rem; line-height:1.5;}
+
+  /* ---------- Library ---------- */
+  .lib-toolbar{display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:18px;}
+  .upload-zone{
+    border:1.5px dashed var(--line-strong); border-radius:var(--radius-l); background:var(--surface);
+    padding:22px 26px; display:flex; align-items:center; gap:16px; cursor:pointer;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .upload-zone:hover{border-color:var(--burgundy); background:var(--burgundy-wash);}
+  .upload-zone .icon-circle{
+    width:44px; height:44px; border-radius:50%; background:var(--burgundy); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:1.3rem; flex-shrink:0;
+  }
+  .upload-zone strong{font-size:0.95rem;}
+  .upload-zone p{margin:2px 0 0; font-size:0.8rem; color:var(--ink-soft);}
+  .filters{display:flex; flex-direction:column; gap:10px; margin-bottom:22px;}
+  .grid{
+    display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:16px;
+  }
+  .item-card{
+    background:var(--surface-raised); border:1px solid var(--line); border-radius:var(--radius-m);
+    overflow:hidden; box-shadow:var(--shadow-card); position:relative; transition:transform .15s ease;
+  }
+  .item-card .thumb{width:100%; aspect-ratio:3/4; object-fit:cover; background:var(--surface); display:block;}
+  .item-card .meta{padding:9px 11px 11px;}
+  .item-card .meta .cat{font-size:0.78rem; font-weight:700;}
+  .item-card .meta .seasons{display:flex; gap:4px; margin-top:5px; flex-wrap:wrap;}
+  .tag-dot{font-size:0.62rem; font-weight:700; letter-spacing:0.04em; padding:2px 7px; border-radius:999px; background:var(--cognac-wash); color:var(--cognac);}
+  .item-card .del{
+    position:absolute; top:7px; right:7px; width:26px; height:26px; border-radius:50%;
+    background:rgba(36,31,27,0.55); color:#fff; border:none; font-size:0.85rem; line-height:1;
+    display:flex; align-items:center; justify-content:center; backdrop-filter:blur(2px);
+  }
+  .item-card .del:hover{background:var(--danger);}
+  .item-card.selectable{cursor:pointer; border-width:2px;}
+  .item-card.selectable:hover{transform:translateY(-2px);}
+  .item-card.chosen{border-color:var(--burgundy); box-shadow:0 0 0 2px var(--burgundy);}
+  .item-card .check{
+    position:absolute; top:7px; left:7px; width:24px; height:24px; border-radius:50%;
+    background:#fff; border:1.5px solid var(--line-strong); display:flex; align-items:center; justify-content:center;
+    font-size:0.75rem; color:transparent;
+  }
+  .item-card.chosen .check{background:var(--burgundy); border-color:var(--burgundy); color:#fff;}
+
+  /* ---------- Tagging modal ---------- */
+  .modal{
+    position:fixed; inset:0; z-index:50; display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-card{
+    background:var(--surface-raised); border-radius:var(--radius-l); width:100%; max-width:480px;
+    box-shadow:var(--shadow-pop); overflow:hidden; max-height:88vh; display:flex; flex-direction:column;
+  }
+  .modal-card .modal-img{width:100%; max-height:260px; object-fit:cover; background:var(--bg);}
+  .modal-body{padding:22px 24px 24px; overflow-y:auto;}
+  .modal-body label.field-label{display:block; font-size:0.72rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--ink-soft); margin:16px 0 8px;}
+  .modal-body label.field-label:first-child{margin-top:0;}
+  .text-input{
+    width:100%; padding:10px 13px; border-radius:var(--radius-s); border:1px solid var(--line-strong);
+    background:var(--surface); font-size:0.92rem; color:var(--ink);
+  }
+  .text-input:focus{outline:2px solid var(--burgundy); outline-offset:1px;}
+  .modal-footer{display:flex; justify-content:space-between; gap:10px; padding:16px 24px; border-top:1px solid var(--line); background:var(--surface);}
+  .queue-count{font-size:0.78rem; color:var(--ink-soft); padding:16px 24px 0;}
+
+  /* ---------- Create screen ---------- */
+  .season-filter-row{display:flex; align-items:center; gap:12px; margin-bottom:20px; flex-wrap:wrap;}
+  .stepper{display:flex; align-items:stretch; gap:6px; margin-bottom:26px; overflow-x:auto; padding-bottom:4px;}
+  .step-pill{
+    display:flex; align-items:center; gap:9px; padding:10px 16px; border-radius:var(--radius-m);
+    border:1px solid var(--line); background:var(--surface); flex-shrink:0; min-width:fit-content;
+    transition:all .15s ease;
+  }
+  .step-pill.current{background:var(--surface-raised); border-color:var(--burgundy); box-shadow:var(--shadow-card);}
+  .step-pill.done{background:var(--burgundy-wash); border-color:var(--burgundy-wash);}
+  .step-pill button{background:none; border:none; display:flex; align-items:center; gap:9px; padding:0;}
+  .step-num{
+    width:22px; height:22px; border-radius:50%; background:var(--ink-faint); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:700; flex-shrink:0;
+  }
+  .step-pill.current .step-num{background:var(--burgundy);}
+  .step-pill.done .step-num{background:var(--cognac);}
+  .step-pill .step-name{font-size:0.82rem; font-weight:600; color:var(--ink);}
+  .step-pill .step-opt{font-size:0.66rem; color:var(--ink-soft); font-weight:500;}
+
+  .create-layout{display:flex; gap:28px; align-items:flex-start;}
+  .create-main{flex:1; min-width:0;}
+  .rail-panel{
+    width:220px; flex-shrink:0; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-l);
+    padding:18px 16px; position:sticky; top:18px;
+  }
+  @media (max-width:920px){
+    .create-layout{flex-direction:column-reverse;}
+    .rail-panel{width:100%; position:static;}
+    .rail-panel .rail-list{flex-direction:row; overflow-x:auto;}
+    .rail-slot{min-width:90px;}
+  }
+  .rail-panel h3{font-size:0.95rem; margin-bottom:4px;}
+  .rail-panel .eyebrow{margin-bottom:14px; display:block;}
+  .rail-list{display:flex; flex-direction:column; gap:10px;}
+  .rail-slot{
+    display:flex; align-items:center; gap:10px; padding:8px; border-radius:var(--radius-s);
+    background:var(--surface-raised); border:1px dashed var(--line-strong); min-height:52px;
+  }
+  .rail-slot.filled{border-style:solid; border-color:var(--line);}
+  .rail-slot img{width:38px; height:38px; border-radius:6px; object-fit:cover; flex-shrink:0;}
+  .rail-slot .ph{width:38px; height:38px; border-radius:6px; background:var(--bg); flex-shrink:0; display:flex; align-items:center; justify-content:center; color:var(--ink-faint); font-size:0.9rem;}
+  .rail-slot .slot-label{font-size:0.72rem; color:var(--ink-soft); font-weight:600;}
+  .rail-slot .slot-value{font-size:0.78rem; font-weight:600;}
+  .rail-slot .acc-list{font-size:0.72rem; color:var(--ink-soft); line-height:1.3;}
+
+  .mode-toggle{display:flex; gap:10px; margin-bottom:18px;}
+  .mode-btn{
+    flex:1; padding:16px; border-radius:var(--radius-m); border:1.5px solid var(--line-strong); background:var(--surface);
+    text-align:left; transition:all .15s ease;
+  }
+  .mode-btn.active{border-color:var(--burgundy); background:var(--burgundy-wash);}
+  .mode-btn strong{display:block; font-size:0.92rem;}
+  .mode-btn span{font-size:0.78rem; color:var(--ink-soft);}
+  .sub-tabs{display:flex; gap:8px; margin-bottom:16px;}
+
+  .step-footer{display:flex; justify-content:space-between; align-items:center; margin-top:26px; padding-top:18px; border-top:1px solid var(--line);}
+
+  /* ---------- Looks ---------- */
+  .look-card{
+    background:var(--surface-raised); border:1px solid var(--line); border-radius:var(--radius-m);
+    overflow:hidden; box-shadow:var(--shadow-card); cursor:pointer; transition:transform .15s ease;
+  }
+  .look-card:hover{transform:translateY(-2px);}
+  .look-stack{display:flex; height:170px; background:var(--bg);}
+  .look-stack img{width:33.3%; height:100%; object-fit:cover; border-right:2px solid var(--surface-raised);}
+  .look-stack img:last-child{border-right:none;}
+  .look-meta{padding:12px 14px 14px;}
+  .look-meta .name{font-size:0.95rem; font-weight:600; font-family:'Fraunces',serif;}
+  .look-meta .row{display:flex; justify-content:space-between; align-items:center; margin-top:6px;}
+  .season-pill{font-size:0.66rem; font-weight:700; letter-spacing:0.04em; padding:3px 9px; border-radius:999px; background:var(--burgundy-wash); color:var(--burgundy-deep);}
+
+  /* ---------- Detail modal ---------- */
+  .detail-card{max-width:560px;}
+  .detail-rail{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:20px 24px 0;}
+  .detail-rail img{width:100%; aspect-ratio:3/4; object-fit:cover; border-radius:var(--radius-s);}
+  .detail-rail .slot-cap{font-size:0.66rem; color:var(--ink-soft); font-weight:600; text-align:center; margin-top:4px;}
+
+  @media (max-width:600px){
+    nav.tabs button{padding:9px 13px; font-size:0.8rem;}
+    .grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));}
+  }
+</style>
+</head>
+<body>
+<div id="app"><div class="empty"><p>Loading your atelier…</p></div></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============ Constants ============ */
+  const CATEGORIES = {
+    dress:{label:'Dress'}, top:{label:'Top'}, bottom:{label:'Bottom'},
+    jacket:{label:'Jacket'}, shoes:{label:'Shoes'}, bag:{label:'Bag'}, accessory:{label:'Accessory'}
+  };
+  const SEASONS = ['spring','summer','fallwinter'];
+  const SEASON_LABELS = {spring:'Spring', summer:'Summer', fallwinter:'Fall–Winter'};
+  const ACCESSORY_SUBTYPES = {jewelry:'Jewelry', scarf:'Scarf', belt:'Belt', other:'Other'};
+  const STEP_DEFS = [
+    {key:'main', title:'Top or Dress', required:true},
+    {key:'jacket', title:'Jacket', required:false},
+    {key:'shoes', title:'Shoes', required:true},
+    {key:'bag', title:'Bag', required:true},
+    {key:'accessories', title:'Accessories', required:false}
+  ];
+
+  /* ============ State ============ */
+  let state = {
+    screen:'library',
+    ready:false,
+    wardrobe:[],
+    outfits:[],
+    library:{ filterCategory:'all', filterSeason:'all' },
+    looks:{ filterSeason:'all' },
+    create: freshCreateState(),
+    pendingQueue:[], // images awaiting tagging
+    detailOutfit:null,
+    toast:null
+  };
+
+  function freshCreateState(){
+    return {
+      editingId:null,
+      stepIndex:0,
+      mainMode:'dress',
+      subTab:'top',
+      seasonFilter:'all',
+      accSubtype:'all',
+      selections:{ dress:null, top:null, bottom:null, jacket:null, shoes:null, bag:null, accessories:[] },
+      name:''
+    };
+  }
+
+  /* ============ Storage helpers (IndexedDB — works standalone, no server needed) ============ */
+  function openDB(){
+    return new Promise((resolve,reject)=>{
+      if(!('indexedDB' in window)){ reject(new Error('IndexedDB unavailable')); return; }
+      const req = indexedDB.open('atelier-db', 1);
+      req.onupgradeneeded = (e)=>{
+        const db = e.target.result;
+        if(!db.objectStoreNames.contains('items')) db.createObjectStore('items', {keyPath:'id'});
+        if(!db.objectStoreNames.contains('outfits')) db.createObjectStore('outfits', {keyPath:'id'});
+      };
+      req.onsuccess = ()=> resolve(req.result);
+      req.onerror = ()=> reject(req.error);
+    });
+  }
+  const dbPromise = openDB().catch(err=>{ console.error('Storage unavailable:', err); return null; });
+
+  function storeGetAll(storeName){
+    return dbPromise.then(db=> new Promise((resolve)=>{
+      if(!db){ resolve([]); return; }
+      const tx = db.transaction(storeName,'readonly');
+      const req = tx.objectStore(storeName).getAll();
+      req.onsuccess = ()=> resolve(req.result || []);
+      req.onerror = ()=> resolve([]);
+    }));
+  }
+  function storePut(storeName, obj){
+    return dbPromise.then(db=> new Promise((resolve,reject)=>{
+      if(!db){ reject(new Error('No database available')); return; }
+      const tx = db.transaction(storeName,'readwrite');
+      tx.objectStore(storeName).put(obj);
+      tx.oncomplete = ()=> resolve();
+      tx.onerror = ()=> reject(tx.error);
+    }));
+  }
+  function storeDelete(storeName, id){
+    return dbPromise.then(db=> new Promise((resolve)=>{
+      if(!db){ resolve(); return; }
+      const tx = db.transaction(storeName,'readwrite');
+      tx.objectStore(storeName).delete(id);
+      tx.oncomplete = ()=> resolve();
+      tx.onerror = ()=> resolve();
+    }));
+  }
+
+  async function loadAllItems(){
+    const all = await storeGetAll('items');
+    return all.sort((a,b)=> b.createdAt - a.createdAt);
+  }
+  async function loadAllOutfits(){
+    const all = await storeGetAll('outfits');
+    return all.sort((a,b)=> b.createdAt - a.createdAt);
+  }
+  async function saveItemToStore(item){ await storePut('items', item); }
+  async function deleteItemFromStore(id){ await storeDelete('items', id); }
+  async function saveOutfitToStore(outfit){ await storePut('outfits', outfit); }
+  async function deleteOutfitFromStore(id){ await storeDelete('outfits', id); }
+
+  /* ============ Image resize ============ */
+  function resizeImage(file, maxDim, quality){
+    maxDim = maxDim || 1000; quality = quality || 0.82;
+    return new Promise((resolve,reject)=>{
+      const reader = new FileReader();
+      reader.onload = function(e){
+        const img = new Image();
+        img.onload = function(){
+          let w = img.width, h = img.height;
+          if(w > h){ if(w > maxDim){ h = Math.round(h*maxDim/w); w = maxDim; } }
+          else { if(h > maxDim){ w = Math.round(w*maxDim/h); h = maxDim; } }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img,0,0,w,h);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+
+  /* ============ Render root ============ */
+  function render(){
+    const app = document.getElementById('app');
+    if(!state.ready){ app.innerHTML = emptyBlock('Loading your atelier…'); return; }
+    app.innerHTML = `
+      ${renderHeader()}
+      <main class="content" id="content"></main>
+      ${state.pendingQueue.length ? renderTagModal() : ''}
+      ${state.detailOutfit ? renderDetailModal() : ''}
+      ${state.toast ? `<div style="position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--ink); color:#fff; padding:12px 22px; border-radius:999px; font-size:0.85rem; font-weight:600; box-shadow:var(--shadow-pop); z-index:60;">${state.toast}</div>` : ''}
+    `;
+    const content = document.getElementById('content');
+    if(state.screen==='library') content.innerHTML = renderLibrary();
+    if(state.screen==='create') content.innerHTML = renderCreate();
+    if(state.screen==='looks') content.innerHTML = renderLooks();
+    attachHandlers();
+  }
+
+  function emptyBlock(msg){
+    return `<div class="empty" style="padding-top:120px;"><p>${msg}</p></div>`;
+  }
+
+  function renderHeader(){
+    return `
+    <header class="top">
+      <div class="wordmark">
+        <h1>Atelier</h1>
+        <span>Outfit Builder</span>
+      </div>
+      <nav class="tabs">
+        <button data-nav="library" class="${state.screen==='library'?'active':''}">Library</button>
+        <button data-nav="create" class="${state.screen==='create'?'active':''}">Create</button>
+        <button data-nav="looks" class="${state.screen==='looks'?'active':''}">Looks</button>
+      </nav>
+    </header>`;
+  }
+
+  /* ============ Library screen ============ */
+  function renderLibrary(){
+    const items = state.wardrobe.filter(it=>{
+      const catOk = state.library.filterCategory==='all' || it.category===state.library.filterCategory;
+      const seaOk = state.library.filterSeason==='all' || it.seasons.includes(state.library.filterSeason);
+      return catOk && seaOk;
+    });
+    return `
+      <div class="lib-toolbar">
+        <div class="upload-zone" id="uploadZone">
+          <div class="icon-circle">+</div>
+          <div>
+            <strong>Add pieces</strong>
+            <p>Upload photos of clothing to build your wardrobe</p>
+          </div>
+        </div>
+        <input type="file" id="fileInput" accept="image/*" multiple style="display:none;">
+      </div>
+      <div class="filters">
+        <div class="chip-row">
+          <button class="chip ${state.library.filterCategory==='all'?'active':''}" data-libcat="all">All pieces</button>
+          ${Object.keys(CATEGORIES).map(k=>`<button class="chip ${state.library.filterCategory===k?'active':''}" data-libcat="${k}">${CATEGORIES[k].label}</button>`).join('')}
+        </div>
+        <div class="chip-row">
+          <button class="chip burgundy ${state.library.filterSeason==='all'?'active':''}" data-libseason="all">All seasons</button>
+          ${SEASONS.map(s=>`<button class="chip burgundy ${state.library.filterSeason===s?'active':''}" data-libseason="${s}">${SEASON_LABELS[s]}</button>`).join('')}
+        </div>
+      </div>
+      ${items.length===0 ? renderLibraryEmpty() : `<div class="grid">${items.map(renderItemCard).join('')}</div>`}
+    `;
+  }
+
+  function renderLibraryEmpty(){
+    if(state.wardrobe.length===0){
+      return `<div class="empty">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M6 2l1.5 3.5L11 7l-3.5 1.5L6 12l-1.5-3.5L1 7l3.5-1.5L6 2z"/><path d="M18 12l1 2.5 2.5 1-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1 1-2.5z"/></svg>
+        <p>Nothing here yet. Add your first piece to start building your wardrobe.</p>
+      </div>`;
+    }
+    return `<div class="empty"><p>No pieces match these filters. Try a different category or season.</p></div>`;
+  }
+
+  function renderItemCard(it, selectMode, chosen){
+    const seasonsHtml = it.seasons.map(s=>`<span class="tag-dot">${SEASON_LABELS[s]}</span>`).join('');
+    const sub = it.category==='accessory' && it.subtype ? ` · ${ACCESSORY_SUBTYPES[it.subtype]}` : '';
+    return `
+    <div class="item-card ${selectMode?'selectable':''} ${chosen?'chosen':''}" data-itemid="${it.id}" ${selectMode?'data-pick="1"':''}>
+      ${selectMode ? `<div class="check">✓</div>` : `<button class="del" data-delitem="${it.id}" title="Remove">✕</button>`}
+      <img class="thumb" src="${it.image}" alt="${it.name || CATEGORIES[it.category].label}">
+      <div class="meta">
+        <div class="cat">${it.name || CATEGORIES[it.category].label}${sub}</div>
+        <div class="seasons">${seasonsHtml}</div>
+      </div>
+    </div>`;
+  }
+
+  /* ============ Tagging modal ============ */
+  let tagDraft = { category:'top', seasons:[], name:'', subtype:'jewelry' };
+  function renderTagModal(){
+    const img = state.pendingQueue[0];
+    return `
+    <div class="scrim"></div>
+    <div class="modal">
+      <div class="modal-card">
+        <img class="modal-img" src="${img.dataURL}" alt="New piece">
+        <div class="queue-count">${state.pendingQueue.length} piece${state.pendingQueue.length>1?'s':''} left to tag</div>
+        <div class="modal-body">
+          <label class="field-label">Category</label>
+          <div class="chip-row">
+            ${Object.keys(CATEGORIES).map(k=>`<button class="chip ${tagDraft.category===k?'active':''}" data-tagcat="${k}">${CATEGORIES[k].label}</button>`).join('')}
+          </div>
+          ${tagDraft.category==='accessory' ? `
+          <label class="field-label">Type</label>
+          <div class="chip-row">
+            ${Object.keys(ACCESSORY_SUBTYPES).map(k=>`<button class="chip ${tagDraft.subtype===k?'active':''}" data-tagsub="${k}">${ACCESSORY_SUBTYPES[k]}</button>`).join('')}
+          </div>` : ''}
+          <label class="field-label">Seasons</label>
+          <div class="chip-row">
+            ${SEASONS.map(s=>`<button class="chip burgundy ${tagDraft.seasons.includes(s)?'active':''}" data-tagseason="${s}">${SEASON_LABELS[s]}</button>`).join('')}
+          </div>
+          <label class="field-label">Name <span style="text-transform:none; font-weight:400;">(optional)</span></label>
+          <input class="text-input" id="tagName" placeholder="e.g. Cognac trench" value="${tagDraft.name}">
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-text" id="tagSkip">Discard this photo</button>
+          <button class="btn btn-primary" id="tagAdd">Add to wardrobe</button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  /* ============ Create screen ============ */
+  function stepComplete(key, sel, mode){
+    if(key==='main') return mode==='dress' ? !!sel.dress : (!!sel.top && !!sel.bottom);
+    if(key==='jacket') return !!sel.jacket;
+    if(key==='shoes') return !!sel.shoes;
+    if(key==='bag') return !!sel.bag;
+    if(key==='accessories') return sel.accessories.length>0;
+    return false;
+  }
+
+  function itemsFor(category, seasonFilter){
+    return state.wardrobe.filter(it=>{
+      const catOk = it.category===category;
+      const seaOk = seasonFilter==='all' || it.seasons.includes(seasonFilter);
+      return catOk && seaOk;
+    });
+  }
+
+  function renderCreate(){
+    const c = state.create;
+    const step = STEP_DEFS[c.stepIndex];
+    return `
+      <div class="season-filter-row">
+        <span class="eyebrow">Show pieces for</span>
+        <div class="chip-row">
+          <button class="chip burgundy ${c.seasonFilter==='all'?'active':''}" data-createseason="all">All seasons</button>
+          ${SEASONS.map(s=>`<button class="chip burgundy ${c.seasonFilter===s?'active':''}" data-createseason="${s}">${SEASON_LABELS[s]}</button>`).join('')}
+        </div>
+      </div>
+      <div class="stepper">
+        ${STEP_DEFS.map((s,i)=>{
+          const done = stepComplete(s.key, c.selections, c.mainMode);
+          const cls = i===c.stepIndex ? 'current' : (done ? 'done' : '');
+          return `<div class="step-pill ${cls}">
+            <button data-gotostep="${i}">
+              <span class="step-num">${done && i!==c.stepIndex ? '✓' : (i+1)}</span>
+              <span>
+                <span class="step-name">${s.title}</span><br>
+                <span class="step-opt">${s.required?'Required':'Optional'}</span>
+              </span>
+            </button>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="create-layout">
+        <div class="create-main">
+          ${renderStepBody(step)}
+          ${renderStepFooter(step)}
+        </div>
+        ${renderRailPanel()}
+      </div>
+    `;
+  }
+
+  function renderStepBody(step){
+    const c = state.create;
+    if(step.key==='main'){
+      return `
+        <h2 style="margin-bottom:16px;">Start with your base</h2>
+        <div class="mode-toggle">
+          <button class="mode-btn ${c.mainMode==='dress'?'active':''}" data-mainmode="dress">
+            <strong>Dress</strong><span>One piece does it all</span>
+          </button>
+          <button class="mode-btn ${c.mainMode==='topbottom'?'active':''}" data-mainmode="topbottom">
+            <strong>Top + Bottom</strong><span>Mix separates</span>
+          </button>
+        </div>
+        ${c.mainMode==='dress' ? renderPickerGrid('dress','dress') : `
+          <div class="sub-tabs">
+            <button class="chip ${c.subTab==='top'?'active':''}" data-subtab="top">Top ${c.selections.top?'✓':''}</button>
+            <button class="chip ${c.subTab==='bottom'?'active':''}" data-subtab="bottom">Bottom ${c.selections.bottom?'✓':''}</button>
+          </div>
+          ${renderPickerGrid(c.subTab, c.subTab)}
+        `}
+      `;
+    }
+    if(step.key==='jacket') return `<h2 style="margin-bottom:16px;">Add a jacket</h2><p style="color:var(--ink-soft); font-size:0.88rem; margin:-8px 0 18px;">Optional — skip if your look doesn't need one.</p>${renderPickerGrid('jacket','jacket')}`;
+    if(step.key==='shoes') return `<h2 style="margin-bottom:16px;">Choose shoes</h2>${renderPickerGrid('shoes','shoes')}`;
+    if(step.key==='bag') return `<h2 style="margin-bottom:16px;">Choose a bag</h2>${renderPickerGrid('bag','bag')}`;
+    if(step.key==='accessories'){
+      return `
+        <h2 style="margin-bottom:6px;">Finish with accessories</h2>
+        <p style="color:var(--ink-soft); font-size:0.88rem; margin:0 0 16px;">Optional — jewelry, scarves, belts. Pick as many as you like.</p>
+        <div class="chip-row" style="margin-bottom:16px;">
+          <button class="chip ${c.accSubtype==='all'?'active':''}" data-accsub="all">All types</button>
+          ${Object.keys(ACCESSORY_SUBTYPES).map(k=>`<button class="chip ${c.accSubtype===k?'active':''}" data-accsub="${k}">${ACCESSORY_SUBTYPES[k]}</button>`).join('')}
+        </div>
+        ${renderAccessoryGrid()}
+      `;
+    }
+    return '';
+  }
+
+  function renderPickerGrid(category, selKey){
+    const c = state.create;
+    const items = itemsFor(category, c.seasonFilter);
+    if(items.length===0){
+      return `<div class="empty">
+        <p>No ${CATEGORIES[category].label.toLowerCase()} pieces tagged${c.seasonFilter!=='all' ? ' for '+SEASON_LABELS[c.seasonFilter] : ''} yet.</p>
+        <button class="btn btn-ghost" data-nav="library">Add pieces in Library</button>
+      </div>`;
+    }
+    return `<div class="grid">${items.map(it=>renderItemCard(it, true, c.selections[selKey]===it.id)).join('')}</div>`;
+  }
+
+  function renderAccessoryGrid(){
+    const c = state.create;
+    let items = itemsFor('accessory', c.seasonFilter);
+    if(c.accSubtype!=='all') items = items.filter(it=>it.subtype===c.accSubtype);
+    if(items.length===0){
+      return `<div class="empty">
+        <p>No accessories tagged${c.seasonFilter!=='all' ? ' for '+SEASON_LABELS[c.seasonFilter] : ''} yet.</p>
+        <button class="btn btn-ghost" data-nav="library">Add pieces in Library</button>
+      </div>`;
+    }
+    return `<div class="grid">${items.map(it=>renderItemCard(it, true, c.selections.accessories.includes(it.id))).join('')}</div>`;
+  }
+
+  function renderStepFooter(step){
+    const c = state.create;
+    const idx = c.stepIndex;
+    const isLast = idx===STEP_DEFS.length-1;
+    const complete = stepComplete(step.key, c.selections, c.mainMode);
+    const canAdvance = step.required ? complete : true;
+    return `
+      <div class="step-footer">
+        <div>${idx>0 ? `<button class="btn btn-ghost" data-stepback="1">Back</button>` : `<span></span>`}</div>
+        <div style="display:flex; gap:10px;">
+          ${(!step.required && !complete) ? `<button class="btn btn-text" data-stepskip="1">Skip this step</button>` : ''}
+          ${isLast
+            ? `<button class="btn btn-primary" data-openreview="1">Review look</button>`
+            : `<button class="btn btn-primary" data-stepnext="1" ${!canAdvance?'disabled':''}>Next</button>`
+          }
+        </div>
+      </div>
+      ${isLast && state.create._reviewOpen ? renderReviewPanel() : ''}
+    `;
+  }
+
+  function renderReviewPanel(){
+    const c = state.create;
+    const chosenItems = collectChosenItems(c);
+    const commonSeasons = SEASONS.filter(s => chosenItems.every(it=> it.seasons.includes(s)));
+    return `
+      <div style="margin-top:22px; padding:20px; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-l);">
+        <h3 style="margin-bottom:14px;">Name this look</h3>
+        <input class="text-input" id="outfitName" placeholder="e.g. Rainy market day" value="${c.name}" style="margin-bottom:14px;">
+        <label class="field-label" style="margin-top:0;">Season</label>
+        <div class="chip-row" style="margin-bottom:18px;">
+          ${SEASONS.map(s=>`<button class="chip burgundy ${(c._seasonTag||commonSeasons[0]||'all')===s?'active':''}" data-reviewseason="${s}">${SEASON_LABELS[s]}</button>`).join('')}
+          <button class="chip burgundy ${(c._seasonTag||commonSeasons[0]||'all')==='all'?'active':''}" data-reviewseason="all">All seasons</button>
+        </div>
+        <button class="btn btn-primary" id="saveOutfit">Save look</button>
+      </div>
+    `;
+  }
+
+  function collectChosenItems(c){
+    const ids = [];
+    if(c.mainMode==='dress'){ if(c.selections.dress) ids.push(c.selections.dress); }
+    else { if(c.selections.top) ids.push(c.selections.top); if(c.selections.bottom) ids.push(c.selections.bottom); }
+    if(c.selections.jacket) ids.push(c.selections.jacket);
+    if(c.selections.shoes) ids.push(c.selections.shoes);
+    if(c.selections.bag) ids.push(c.selections.bag);
+    ids.push(...c.selections.accessories);
+    return ids.map(id=> state.wardrobe.find(it=>it.id===id)).filter(Boolean);
+  }
+
+  function findItem(id){ return state.wardrobe.find(it=>it.id===id); }
+
+  function renderRailPanel(){
+    const c = state.create;
+    const slots = [];
+    if(c.mainMode==='dress'){
+      const it = findItem(c.selections.dress);
+      slots.push(railSlot('Dress', it));
+    } else {
+      slots.push(railSlot('Top', findItem(c.selections.top)));
+      slots.push(railSlot('Bottom', findItem(c.selections.bottom)));
+    }
+    slots.push(railSlot('Jacket', findItem(c.selections.jacket)));
+    slots.push(railSlot('Shoes', findItem(c.selections.shoes)));
+    slots.push(railSlot('Bag', findItem(c.selections.bag)));
+    const accItems = c.selections.accessories.map(findItem).filter(Boolean);
+    slots.push(`
+      <div class="rail-slot ${accItems.length?'filled':''}">
+        ${accItems.length ? `<img src="${accItems[0].image}" alt="">` : `<div class="ph">·</div>`}
+        <div>
+          <div class="slot-label">Accessories</div>
+          <div class="acc-list">${accItems.length ? accItems.map(a=>a.name||ACCESSORY_SUBTYPES[a.subtype]||'Piece').join(', ') : 'None yet'}</div>
+        </div>
+      </div>
+    `);
+    return `
+      <div class="rail-panel">
+        <span class="eyebrow">The Rail</span>
+        <h3 style="margin-bottom:14px;">Building your look</h3>
+        <div class="rail-list">${slots.join('')}</div>
+      </div>
+    `;
+  }
+  function railSlot(label, item){
+    return `
+      <div class="rail-slot ${item?'filled':''}">
+        ${item ? `<img src="${item.image}" alt="">` : `<div class="ph">·</div>`}
+        <div>
+          <div class="slot-label">${label}</div>
+          <div class="slot-value">${item ? (item.name || CATEGORIES[item.category].label) : 'Not selected'}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  /* ============ Looks screen ============ */
+  function renderLooks(){
+    const outfits = state.outfits.filter(o=> state.looks.filterSeason==='all' || o.season===state.looks.filterSeason || o.season==='all');
+    return `
+      <div class="filters">
+        <div class="chip-row">
+          <button class="chip burgundy ${state.looks.filterSeason==='all'?'active':''}" data-lookseason="all">All seasons</button>
+          ${SEASONS.map(s=>`<button class="chip burgundy ${state.looks.filterSeason===s?'active':''}" data-lookseason="${s}">${SEASON_LABELS[s]}</button>`).join('')}
+        </div>
+      </div>
+      ${outfits.length===0 ? `<div class="empty"><p>No looks assembled yet. Head to Create to put one together.</p><button class="btn btn-ghost" data-nav="create">Start creating</button></div>` : `
+        <div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr));">
+          ${outfits.map(renderLookCard).join('')}
+        </div>
+      `}
+    `;
+  }
+
+  function outfitImages(outfit){
+    const ids = outfitItemIds(outfit);
+    return ids.map(findItem).filter(Boolean).slice(0,3);
+  }
+  function outfitItemIds(outfit){
+    const s = outfit.selections;
+    const ids = [];
+    if(outfit.mainMode==='dress'){ if(s.dress) ids.push(s.dress); } else { if(s.top) ids.push(s.top); if(s.bottom) ids.push(s.bottom); }
+    if(s.jacket) ids.push(s.jacket);
+    if(s.shoes) ids.push(s.shoes);
+    if(s.bag) ids.push(s.bag);
+    ids.push(...s.accessories);
+    return ids;
+  }
+
+  function renderLookCard(outfit){
+    const imgs = outfitImages(outfit);
+    return `
+      <div class="look-card" data-lookid="${outfit.id}">
+        <div class="look-stack">${imgs.map(it=>`<img src="${it.image}" alt="">`).join('') || `<div class="ph"></div>`}</div>
+        <div class="look-meta">
+          <div class="name">${outfit.name || 'Untitled look'}</div>
+          <div class="row">
+            <span class="season-pill">${outfit.season==='all' ? 'All seasons' : SEASON_LABELS[outfit.season]}</span>
+            <span style="font-size:0.72rem; color:var(--ink-soft);">${new Date(outfit.createdAt).toLocaleDateString(undefined,{month:'short', day:'numeric'})}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderDetailModal(){
+    const outfit = state.detailOutfit;
+    const ids = outfitItemIds(outfit);
+    const items = ids.map(findItem).filter(Boolean);
+    return `
+      <div class="scrim" data-closedetail="1"></div>
+      <div class="modal">
+        <div class="modal-card detail-card">
+          <div style="padding:22px 24px 0; display:flex; justify-content:space-between; align-items:flex-start;">
+            <div>
+              <h3>${outfit.name || 'Untitled look'}</h3>
+              <span class="season-pill" style="margin-top:6px; display:inline-block;">${outfit.season==='all'?'All seasons':SEASON_LABELS[outfit.season]}</span>
+            </div>
+            <button class="btn btn-text" data-closedetail="1" style="font-size:1.1rem;">✕</button>
+          </div>
+          <div class="detail-rail">
+            ${items.map(it=>`<div><img src="${it.image}" alt=""><div class="slot-cap">${it.name || CATEGORIES[it.category].label}</div></div>`).join('')}
+          </div>
+          <div class="modal-footer" style="margin-top:16px;">
+            <button class="btn btn-danger" data-deletelook="${outfit.id}">Delete look</button>
+            <button class="btn btn-ghost" data-editlook="${outfit.id}">Edit</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  /* ============ Event handling ============ */
+  function attachHandlers(){
+    const app = document.getElementById('app');
+
+    app.querySelectorAll('[data-nav]').forEach(el=> el.addEventListener('click', ()=>{
+      state.screen = el.getAttribute('data-nav'); render();
+    }));
+
+    // Library
+    const uz = document.getElementById('uploadZone');
+    if(uz) uz.addEventListener('click', ()=> document.getElementById('fileInput').click());
+    const fi = document.getElementById('fileInput');
+    if(fi) fi.addEventListener('change', async (e)=>{
+      const files = Array.from(e.target.files);
+      const resized = [];
+      for(const f of files){
+        try{ const dataURL = await resizeImage(f); resized.push({tempId:uid(), dataURL}); }catch(err){}
+      }
+      state.pendingQueue.push(...resized);
+      tagDraft = { category:'top', seasons:[], name:'', subtype:'jewelry' };
+      render();
+    });
+
+    app.querySelectorAll('[data-libcat]').forEach(el=> el.addEventListener('click', ()=>{
+      state.library.filterCategory = el.getAttribute('data-libcat'); render();
+    }));
+    app.querySelectorAll('[data-libseason]').forEach(el=> el.addEventListener('click', ()=>{
+      state.library.filterSeason = el.getAttribute('data-libseason'); render();
+    }));
+    app.querySelectorAll('[data-delitem]').forEach(el=> el.addEventListener('click', async (e)=>{
+      e.stopPropagation();
+      const id = el.getAttribute('data-delitem');
+      await deleteItemFromStore(id);
+      state.wardrobe = state.wardrobe.filter(it=>it.id!==id);
+      render();
+    }));
+
+    // Tag modal
+    app.querySelectorAll('[data-tagcat]').forEach(el=> el.addEventListener('click', ()=>{ tagDraft.category = el.getAttribute('data-tagcat'); render(); }));
+    app.querySelectorAll('[data-tagsub]').forEach(el=> el.addEventListener('click', ()=>{ tagDraft.subtype = el.getAttribute('data-tagsub'); render(); }));
+    app.querySelectorAll('[data-tagseason]').forEach(el=> el.addEventListener('click', ()=>{
+      const s = el.getAttribute('data-tagseason');
+      const i = tagDraft.seasons.indexOf(s);
+      if(i>=0) tagDraft.seasons.splice(i,1); else tagDraft.seasons.push(s);
+      render();
+    }));
+    const tagNameInput = document.getElementById('tagName');
+    if(tagNameInput) tagNameInput.addEventListener('input', (e)=>{ tagDraft.name = e.target.value; });
+    const tagAddBtn = document.getElementById('tagAdd');
+    if(tagAddBtn) tagAddBtn.addEventListener('click', async ()=>{
+      const pending = state.pendingQueue[0];
+      const item = {
+        id:uid(), category:tagDraft.category, subtype: tagDraft.category==='accessory'?tagDraft.subtype:null,
+        seasons: tagDraft.seasons.length?tagDraft.seasons:[...SEASONS], name: (document.getElementById('tagName')||{value:''}).value.trim(),
+        image: pending.dataURL, createdAt: Date.now()
+      };
+      try{
+        await saveItemToStore(item);
+        state.wardrobe.unshift(item);
+        state.pendingQueue.shift();
+        tagDraft = { category:'top', seasons:[], name:'', subtype:'jewelry' };
+      }catch(err){
+        state.toast = "Couldn't save — storage unavailable in this browser";
+        setTimeout(()=>{ state.toast=null; render(); }, 3000);
+      }
+      render();
+    });
+    const tagSkipBtn = document.getElementById('tagSkip');
+    if(tagSkipBtn) tagSkipBtn.addEventListener('click', ()=>{
+      state.pendingQueue.shift();
+      tagDraft = { category:'top', seasons:[], name:'', subtype:'jewelry' };
+      render();
+    });
+
+    // Create screen
+    app.querySelectorAll('[data-createseason]').forEach(el=> el.addEventListener('click', ()=>{
+      state.create.seasonFilter = el.getAttribute('data-createseason'); render();
+    }));
+    app.querySelectorAll('[data-gotostep]').forEach(el=> el.addEventListener('click', ()=>{
+      state.create.stepIndex = parseInt(el.getAttribute('data-gotostep'),10);
+      state.create._reviewOpen = false;
+      render();
+    }));
+    app.querySelectorAll('[data-mainmode]').forEach(el=> el.addEventListener('click', ()=>{
+      state.create.mainMode = el.getAttribute('data-mainmode'); render();
+    }));
+    app.querySelectorAll('[data-subtab]').forEach(el=> el.addEventListener('click', ()=>{
+      state.create.subTab = el.getAttribute('data-subtab'); render();
+    }));
+    app.querySelectorAll('[data-accsub]').forEach(el=> el.addEventListener('click', ()=>{
+      state.create.accSubtype = el.getAttribute('data-accsub'); render();
+    }));
+    app.querySelectorAll('[data-pick="1"]').forEach(el=> el.addEventListener('click', ()=>{
+      const id = el.getAttribute('data-itemid');
+      const c = state.create;
+      const step = STEP_DEFS[c.stepIndex];
+      if(step.key==='main'){
+        if(c.mainMode==='dress') c.selections.dress = (c.selections.dress===id ? null : id);
+        else c.selections[c.subTab] = (c.selections[c.subTab]===id ? null : id);
+      } else if(step.key==='jacket') c.selections.jacket = (c.selections.jacket===id ? null : id);
+      else if(step.key==='shoes') c.selections.shoes = (c.selections.shoes===id ? null : id);
+      else if(step.key==='bag') c.selections.bag = (c.selections.bag===id ? null : id);
+      else if(step.key==='accessories'){
+        const i = c.selections.accessories.indexOf(id);
+        if(i>=0) c.selections.accessories.splice(i,1); else c.selections.accessories.push(id);
+      }
+      render();
+    }));
+    const backBtn = document.querySelector('[data-stepback]');
+    if(backBtn) backBtn.addEventListener('click', ()=>{ state.create.stepIndex--; state.create._reviewOpen=false; render(); });
+    const nextBtn = document.querySelector('[data-stepnext]');
+    if(nextBtn) nextBtn.addEventListener('click', ()=>{ state.create.stepIndex++; render(); });
+    const skipBtn = document.querySelector('[data-stepskip]');
+    if(skipBtn) skipBtn.addEventListener('click', ()=>{ state.create.stepIndex++; render(); });
+    const reviewBtn = document.querySelector('[data-openreview]');
+    if(reviewBtn) reviewBtn.addEventListener('click', ()=>{ state.create._reviewOpen = true; render(); });
+    const outfitNameInput = document.getElementById('outfitName');
+    if(outfitNameInput) outfitNameInput.addEventListener('input', (e)=>{ state.create.name = e.target.value; });
+    app.querySelectorAll('[data-reviewseason]').forEach(el=> el.addEventListener('click', ()=>{
+      state.create._seasonTag = el.getAttribute('data-reviewseason'); render();
+    }));
+    const saveBtn = document.getElementById('saveOutfit');
+    if(saveBtn) saveBtn.addEventListener('click', async ()=>{
+      const c = state.create;
+      const chosen = collectChosenItems(c);
+      const commonSeasons = SEASONS.filter(s => chosen.every(it=> it.seasons.includes(s)));
+      const season = c._seasonTag || commonSeasons[0] || 'all';
+      const outfit = {
+        id: c.editingId || uid(),
+        name: (document.getElementById('outfitName')||{value:c.name}).value.trim(),
+        season,
+        mainMode: c.mainMode,
+        selections: JSON.parse(JSON.stringify(c.selections)),
+        createdAt: c.editingId ? (state.outfits.find(o=>o.id===c.editingId)||{}).createdAt || Date.now() : Date.now()
+      };
+      try{
+        await saveOutfitToStore(outfit);
+        state.outfits = state.outfits.filter(o=>o.id!==outfit.id);
+        state.outfits.unshift(outfit);
+        state.create = freshCreateState();
+        state.screen = 'looks';
+        state.toast = 'Look saved';
+      }catch(err){
+        state.toast = "Couldn't save — storage unavailable in this browser";
+      }
+      render();
+      setTimeout(()=>{ state.toast=null; render(); }, 2500);
+    });
+
+    // Looks
+    app.querySelectorAll('[data-lookseason]').forEach(el=> el.addEventListener('click', ()=>{
+      state.looks.filterSeason = el.getAttribute('data-lookseason'); render();
+    }));
+    app.querySelectorAll('[data-lookid]').forEach(el=> el.addEventListener('click', ()=>{
+      state.detailOutfit = state.outfits.find(o=>o.id===el.getAttribute('data-lookid'));
+      render();
+    }));
+    app.querySelectorAll('[data-closedetail]').forEach(el=> el.addEventListener('click', ()=>{ state.detailOutfit=null; render(); }));
+    app.querySelectorAll('[data-deletelook]').forEach(el=> el.addEventListener('click', async ()=>{
+      const id = el.getAttribute('data-deletelook');
+      await deleteOutfitFromStore(id);
+      state.outfits = state.outfits.filter(o=>o.id!==id);
+      state.detailOutfit = null;
+      render();
+    }));
+    app.querySelectorAll('[data-editlook]').forEach(el=> el.addEventListener('click', ()=>{
+      const outfit = state.outfits.find(o=>o.id===el.getAttribute('data-editlook'));
+      if(!outfit) return;
+      state.create = {
+        editingId: outfit.id, stepIndex:0, mainMode: outfit.mainMode, subTab:'top',
+        seasonFilter:'all', accSubtype:'all',
+        selections: JSON.parse(JSON.stringify(outfit.selections)),
+        name: outfit.name, _seasonTag: outfit.season
+      };
+      state.detailOutfit = null;
+      state.screen = 'create';
+      render();
+    }));
+  }
+
+  /* ============ Init ============ */
+  async function init(){
+    try{
+      state.wardrobe = await loadAllItems();
+      state.outfits = await loadAllOutfits();
+    }catch(e){ console.error('Storage load failed', e); }
+    state.ready = true;
+    render();
+  }
+  init();
+})();
+</script>
+</body>
+</html>
